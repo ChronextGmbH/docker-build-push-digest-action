@@ -69,12 +69,13 @@ jobs:
         run: |
           IMAGE_NAME=$(echo "${{ env.REGISTRY }}/${{ github.repository }}${{ inputs.name }}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "ARTIFACT_NAMESPACE=$(echo "$IMAGE_NAME" | sha256sum | awk '{print $1}')" >> $GITHUB_ENV
 
       - name: Download digests
         uses: actions/download-artifact@v4.1.8
         with:
           path: /tmp/digests/${{ env.IMAGE_NAME }}
-          pattern: digests-*
+          pattern: digests-${{ env.ARTIFACT_NAMESPACE }}-*
           merge-multiple: true
 
       - name: Log in to the container registry

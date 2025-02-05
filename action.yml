@@ -52,13 +52,13 @@ runs:
         mkdir -p /tmp/digests/${{ inputs.image-name }}
         digest="${{ steps.build.outputs.digest }}"
         touch "/tmp/digests/${{ inputs.image-name }}/${digest#sha256:}"
-        echo "ARTIFACT_NAMESPACE=$(echo "${{ inputs.image-name }}" | sha256sum | awk '{print $1}')"
+        echo "ARTIFACT_NAMESPACE=$(echo "${{ inputs.image-name }}" | sha256sum | awk '{print $1}')" >> $GITHUB_ENV
       shell: bash
 
     - name: Upload digest
       uses: actions/upload-artifact@v4.6.0
       with:
-        name: digests-${{ env.ARTIFACT_NAME }}-${{ inputs.platform }}
+        name: digests-${{ env.ARTIFACT_NAMESPACE }}-${{ inputs.platform }}
         path: /tmp/digests/${{ inputs.image-name }}/*
         if-no-files-found: error
         retention-days: 1
