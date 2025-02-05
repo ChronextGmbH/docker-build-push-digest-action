@@ -2,6 +2,15 @@ name: Build and Publish Docker Images
 
 on:
   workflow_call:
+    inputs:
+      dockerfile:
+        description: "Path to the Dockerfile"
+        required: false
+        default: "Dockerfile"
+      context:
+        description: "Path to the build context"
+        required: false
+        default: "."
 
 env:
   REGISTRY: ghcr.io
@@ -37,8 +46,8 @@ jobs:
           image-name: ${{ env.IMAGE_NAME }}
           platform: ${{ matrix.platform.name }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: Dockerfile
-          context: .
+          file: ${{ inputs.dockerfile }}
+          context: ${{ inputs.context }}
 
   merge-digests:
     runs-on: ubuntu-latest
