@@ -18,7 +18,6 @@ on:
         description: "Name of the image (without registry and repository)"
         required: false
         default: ""
-        example: "/my-image"
 
 env:
   REGISTRY: ghcr.io
