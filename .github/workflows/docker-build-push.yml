@@ -4,14 +4,17 @@ on:
   workflow_call:
     inputs:
       dockerfile:
+        type: string
         description: "Path to the Dockerfile"
         required: false
         default: "Dockerfile"
       context:
+        type: string
         description: "Path to the build context"
         required: false
         default: "."
       name:
+        type: string
         description: "Name of the image (without registry and repository)"
         required: false
         default: ""
