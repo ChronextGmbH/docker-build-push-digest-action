@@ -50,7 +50,7 @@ runs:
       uses: docker/build-push-action@v6.13.0
       with:
         platforms: linux/${{ inputs.platform }}
-        outputs: type=image,name=${{ inputs.image-name }},push-by-digest=true,name-canonical=true,push=true
+        outputs: type=image,name=${{ inputs.image-name }},push-by-digest=false,name-canonical=true,push=true
         file: ${{ inputs.file }}
         context: ${{ inputs.context }}
         labels: ${{ steps.meta.outputs.labels }}
