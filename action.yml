@@ -52,6 +52,7 @@ runs:
         platforms: linux/${{ inputs.platform }}
         outputs: type=image,name=${{ inputs.image-name }},push-by-digest=false,name-canonical=true,push=true
         file: ${{ inputs.file }}
+        provenance: false
         context: ${{ inputs.context }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=registry,ref=${{ inputs.image-name }}:buildcache-${{ inputs.platform }}
