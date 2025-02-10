@@ -2,6 +2,13 @@ name: Build and Publish Docker Images
 
 on:
   workflow_call:
+    secrets:
+      composer-token:
+        description: "GitHub token"
+        required: true
+      pub-key:
+          description: "GitHub token"
+          required: true
     inputs:
       dockerfile:
         type: string
@@ -18,9 +25,14 @@ on:
         description: "Name of the image (without registry and repository)"
         required: false
         default: ""
-      build-args:
+      base_image:
         type: string
-        description: "Build arguments"
+        description: "Base image name"
+        required: false
+        default: ""
+      develop_image:
+        type: string
+        description: "Develop image name"
         required: false
         default: ""
 
@@ -60,7 +72,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ inputs.dockerfile }}
           context: ${{ inputs.context }}
-          build-args: ${{ inputs.build-args }}
+          build-args: |
+            FROM_BASE=${{ inputs.base_image }}
+            FROM_DEVELOP=${{ inputs.develop_image }}
+            USER_SERVICE_PUB_KEY=${{ secrets.pub-key }}
+            COMPOSER_TOKEN=${{ secrets.composer-token }}
+
 
   merge-digests:
     runs-on: ubuntu-latest
