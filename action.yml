@@ -55,7 +55,6 @@ runs:
       uses: docker/build-push-action@v6.13.0
       with:
         platforms: linux/${{ inputs.platform }}
-        outputs: type=image,name=${{ inputs.image-name }},push-by-digest=false,name-canonical=true,push=true
         file: ${{ inputs.file }}
         context: ${{ inputs.context }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -80,3 +79,4 @@ runs:
         path: /tmp/digests/${{ inputs.image-name }}/*
         if-no-files-found: error
         retention-days: 1
+
