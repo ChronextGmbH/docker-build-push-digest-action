@@ -63,6 +63,7 @@ runs:
         cache-to: type=registry,ref=${{ inputs.image-name }}:buildcache-${{ inputs.platform }}
         build-args: ${{ inputs.build-args }}
         tags: ${{ steps.meta.outputs.tags }}
+        push: true
 
     - name: Export digest
       run: |
