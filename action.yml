@@ -54,8 +54,8 @@ runs:
         file: ${{ inputs.file }}
         context: ${{ inputs.context }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=registry,ref=${{ inputs.image-name }}:buildcache-${{ inputs.platform }}
-        cache-to: type=registry,ref=${{ inputs.image-name }}:buildcache-${{ inputs.platform }}
+        cache-from: type=registry,ref=${{ inputs.image-name }}:buildcache
+        cache-to: type=registry,ref=${{ inputs.image-name }}:buildcache
         build-args: ${{ inputs.build-args }}
         tags: ${{ steps.meta.outputs.tags }}
 
