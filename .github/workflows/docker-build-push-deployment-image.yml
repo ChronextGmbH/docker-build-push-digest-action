@@ -65,7 +65,7 @@ jobs:
           echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
 
       - name: Build and push Docker image
-        uses: ChronextGmbH/docker-build-push-digest-action@main
+        uses: ChronextGmbH/docker-build-push-digest-action@build-args
         with:
           image-name: ${{ env.IMAGE_NAME }}
           platform: ${{ matrix.platform.name }}
