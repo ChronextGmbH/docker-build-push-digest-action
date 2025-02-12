@@ -53,13 +53,13 @@ jobs:
       - name: Set image name
         id: set-output
         run: |
-          SHARED_VARIABLE=$(echo "${{ inputs.IMAGE_BASE_REPO }}-${{ inputs.image_version }}" | tr '[:upper:]' '[:lower:]')
+          SHARED_VARIABLE=$(echo "${{ env.IMAGE_BASE_REPO }}-${{ inputs.image_version }}" | tr '[:upper:]' '[:lower:]')
           echo "image-name=$SHARED_VARIABLE" >> $GITHUB_OUTPUT
 
       - name: Set dockerfile path
         id: set-output2
         run: |
-          SHARED_VARIABLE="${{ env.IMAGE_FOLDER_BASE }}/${{ inputs.image_folder_name }}"
+          SHARED_VARIABLE="${{ inputs.IMAGE_FOLDER_BASE }}/${{ inputs.image_folder_name }}"
           echo "dockerfile-path=$SHARED_VARIABLE" >> $GITHUB_OUTPUT
         
 
