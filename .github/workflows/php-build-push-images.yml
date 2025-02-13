@@ -68,7 +68,7 @@ jobs:
     needs:
       - setup-image-name
 
-    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push.yml@build-args
+    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push.yml@main
     with:
       name: "${{ needs.setup-image-name.outputs.image-name }}-base"
       dockerfile: "${{ needs.setup-image-name.outputs.dockerfile-path }}/Base.Dockerfile"
@@ -80,7 +80,7 @@ jobs:
       - build-base-image
 
 
-    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push.yml@build-args
+    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push.yml@main
     with:
       name: '${{ needs.setup-image-name.outputs.image-name }}-test'
       dockerfile: ${{ needs.setup-image-name.outputs.dockerfile-path }}/Test.Dockerfile
@@ -93,7 +93,7 @@ jobs:
       - build-base-image
       - setup-image-name
 
-    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push.yml@build-args
+    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push.yml@main
     with:
       name: '${{ needs.setup-image-name.outputs.image-name }}-develop'
       dockerfile: ${{ needs.setup-image-name.outputs.dockerfile-path }}/Test.Dockerfile
@@ -111,7 +111,7 @@ jobs:
       pub-key: ${{ secrets.PUB_KEY }}
       composer-token: ${{ secrets.composer-token }}
 
-    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push-deployment-image.yml@build-args
+    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push-deployment-image.yml@main
     with:
       name: '${{ needs.setup-image-name.outputs.image-name }}-${{ inputs.deployment_image_tag }}'
       dockerfile: ${{ needs.setup-image-name.outputs.dockerfile-path }}/Deploy.Dockerfile
