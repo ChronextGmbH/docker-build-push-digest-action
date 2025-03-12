@@ -1,0 +1,104 @@
+name: 'Terrafom action'
+description: 'Runs terraform'
+
+inputs:
+  tf_environment:
+    description: 'Name of the terraform environment'
+    required: true
+  aws_role:
+    description: 'AWS role arn for deployment'
+    required: true
+  vault_token:
+    description: 'access token to save secrets in vault store'
+
+  github_token:
+    description: 'GitHub token'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Auth AWS
+      id: 'auth'
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+          role-to-assume: ${{ inputs.AWS_ROLE }}
+          aws-region: 'eu-central-1'
+
+    - name: Setup private repo credentials for private modules
+      run: |
+        git config --global url."https://git:${{ inputs.github_token }}@github.com/${{ github.repository_owner }}".insteadOf "https://github.com/${{ github.repository_owner }}"
+        git config --global url."https://git:${{ inputs.github_token }}@github.com/${{ github.repository_owner }}".insteadOf ssh://git@github.com/${{ github.repository_owner }}
+      shell: sh
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.9.8"
+        terraform_wrapper: false
+    - name:
+        Terraform Format
+      id: fmt
+      run: terraform fmt -check
+      shell: bash
+      continue-on-error: true
+      working-directory: ./deploy/terraform/${{ inputs.tf_environment }}
+    - name: tfsec
+      if: github.event_name == 'pull_request' && github.event.pull_request.merged == false
+      uses: aquasecurity/tfsec-action@v1.0.3
+      with:
+        working-directory: ./deploy/terraform/${{ inputs.tf_environment }}
+    - name:
+        Terraform Init
+      id: init
+      run: terraform init
+      shell: bash
+      working-directory: ./deploy/terraform/${{ inputs.tf_environment }}
+
+    - name:
+        Terraform Validate
+      id: validate
+      if: github.event_name == 'pull_request' && github.event.pull_request.merged == false
+      run: terraform validate -no-color
+      shell: bash
+      working-directory: ./deploy/terraform/${{ inputs.tf_environment }}
+    - name:
+        Terraform Plan
+      id: plan
+      run: | 
+        
+        terraform plan  -input=false 
+
+      shell: bash
+      working-directory: ./deploy/terraform/${{ inputs.tf_environment }}
+      env:
+        TF_VAR_vault_token: ${{ inputs.vault_token }}
+
+    - name: save plan
+      id: save_plan
+      run: |
+        PLAN_FILE=$(echo "${{ github.ref }}_${{ inputs.tf_environment }}_plan.tfplan" | tr  '/' '_')
+        PLAN_ID=$(echo "${{ github.event.pull_request.head.ref }}_${{ github.event.pull_request.number }}_${{ inputs.tf_environment }}_plan" | tr  '/' '_')
+        echo "PLAN_FILE=$PLAN_FILE" >> $GITHUB_ENV
+        echo "PLAN_ID=$PLAN_ID" >> $GITHUB_ENV
+        terraform plan -no-color -input=false -out /tmp/$PLAN_FILE 2>&1 | tee ${{ github.workspace }}/plan.txt
+        terraform show -json /tmp/$PLAN_FILE > tfplan.json
+      shell: bash
+      env:
+        TF_VAR_vault_token: ${{ inputs.vault_token }}
+      working-directory: ./deploy/terraform/${{ inputs.tf_environment }}
+
+
+    - uses: liatrio/terraform-change-pr-commenter@v1.4.0
+      if: github.event_name == 'pull_request' && github.event.pull_request.merged == false
+      with:
+        json-file: ./deploy/terraform/${{ inputs.tf_environment }}/tfplan.json
+        expand-comment: 'true'
+        include-plan-job-summary: 'true'
+
+
+    - name: Terraform Apply
+      if: github.event.pull_request.merged == true
+      shell: bash
+      run: terraform apply -auto-approve -input=false /tmp/$PLAN_FILE
+      working-directory: ./deploy/terraform/${{ inputs.tf_environment }}
+      env:
+        TF_VAR_vault_token: ${{ inputs.vault_token }}
