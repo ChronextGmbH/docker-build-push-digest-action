@@ -15,6 +15,19 @@ on:
         description: "base sqs url"
         required: true
         type: string
+      namespace:
+        description: "Kubernetes namespace"
+        required: true
+        type: string
+      chart_app_env:
+        description: "App environment"
+        required: true
+        type: string
+      helm_app_name:
+        description: "Helm app name"
+        required: true
+        type: string
+
     secrets:
       GHA_TOKEN:
         required: true
@@ -59,14 +72,14 @@ jobs:
           
           
           
-          helm upgrade $HELM_APP_NAME /service-chart \
+          helm upgrade ${{ inputs.helm_app_name }} /service-chart \
             --kube-token $TOKEN \
             --kube-apiserver https://kubernetes.default.svc \
             --kube-ca-file /var/run/ca.crt \
             --debug --install --create-namespace \
             -f deploy/helm/values-env.yaml \
-            --namespace "$NAMESPACE" \
-            --set app_env=$CHART_APP_ENV \
+            --namespace ${{ inputs.namespace }} \
+            --set app_env=${{ inputs.helm_app_env }} \
             --set image.name=$IMAGE_NAME \
             --set image.credentials.username=${{ github.actor }} \
             --set image.credentials.password=${{ secrets.GITHUB_TOKEN }} \
