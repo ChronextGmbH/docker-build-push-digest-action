@@ -12,7 +12,7 @@ on:
         required: true
         type: string
     secrets:
-      GITHUB_TOKEN:
+      GHA_TOKEN:
         required: true
       AWS_KEDA_PROD_ACCESS_KEY_ID:
         required: true
@@ -38,7 +38,7 @@ jobs:
         - /var/run/secrets/kubernetes.io/serviceaccount/token:/var/run/token
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ secrets.GHA_TOKEN }}
 
     steps:
       - name: Checkout repository
