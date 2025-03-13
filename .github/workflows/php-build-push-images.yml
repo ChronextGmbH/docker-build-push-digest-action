@@ -2,6 +2,10 @@ name: Build and Publish Docker Images
 
 on:
   workflow_call:
+    outputs:
+      deployment_image:
+        description: "path to docker image with tag (github.ref_name)"
+        value: ${{ jobs.set-image-name.outputs.deployment-image }}
     secrets:
       composer-token:
         description: "GitHub token"
@@ -47,6 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image-name: ${{ steps.set-output.outputs.image-name }}
+      deployment-image: ${{ steps.set-output.outputs.deployment-image }}
       dockerfile-path: ${{ steps.set-output2.outputs.dockerfile-path }}
     steps:
 
@@ -54,7 +59,9 @@ jobs:
         id: set-output
         run: |
           SHARED_VARIABLE=$(echo "${{ env.IMAGE_BASE_REPO }}-${{ inputs.image_version }}" | tr '[:upper:]' '[:lower:]')
+          DEPLOYMENT_IMAGE=$(echo "${SHARED_VARIABLE}-${{ inputs.deployment_image_tag }}:${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]')
           echo "image-name=$SHARED_VARIABLE" >> $GITHUB_OUTPUT
+          echo "deployment-image=$DEPLOYMENT_IMAGE" >> $GITHUB_OUTPUT
 
       - name: Set dockerfile path
         id: set-output2
@@ -64,7 +71,6 @@ jobs:
         
 
   build-base-image:
-
     needs:
       - setup-image-name
 
@@ -118,8 +124,6 @@ jobs:
       context: .
       base_image: "${{ needs.setup-image-name.outputs.image-name }}-base:${{ github.ref_name }}"
       develop_image: "${{ needs.setup-image-name.outputs.image-name }}-develop:${{ github.ref_name }}"
-
-
 
       
 
