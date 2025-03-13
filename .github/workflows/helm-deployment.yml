@@ -57,7 +57,7 @@ jobs:
             --kube-ca-file /var/run/ca.crt \
             --debug --install --create-namespace \
             -f deploy/helm/values-env.yaml \
-            --namespace "$CI_PROJECT_NAME" \
+            --namespace "$NAMESPACE" \
             --set app_env=$CHART_APP_ENV \
             --set image.name=$IMAGE_NAME \
             --set image.credentials.username=${{ github.actor }} \
