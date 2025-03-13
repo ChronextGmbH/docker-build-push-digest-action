@@ -12,6 +12,8 @@ on:
         required: true
         type: string
     secrets:
+      SQS_URL:
+        required: true
       GHA_TOKEN:
         required: true
       AWS_KEDA_PROD_ACCESS_KEY_ID:
@@ -44,12 +46,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+
       - name: Deploy to ${{ inputs.environment }}
         run: |
+          export SQS_URL=${{ inputs.SQS_URL }}
           envsubst < deploy/helm/values.yaml > deploy/helm/values-env.yaml
           cat deploy/helm/values-env.yaml
           export TOKEN=$(cat /var/run/token)
           IMAGE_NAME=$(echo "${{ inputs.docker_image }}" | tr '[:upper:]' '[:lower:]')
+          
+          
           
           helm upgrade $HELM_APP_NAME /service-chart \
             --kube-token $TOKEN \
