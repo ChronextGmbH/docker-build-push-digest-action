@@ -86,7 +86,7 @@ jobs:
             --namespace ${{ inputs.namespace }} \
             --set app_env=${{ inputs.chart_app_env }} \
             --set image.name=$IMAGE_NAME \
-            --set image.name=${{ inputs.ingress_host }} \
+            --set ingress.host=${{ inputs.ingress_host }} \
             --set image.credentials.username=${{ github.actor }} \
             --set image.credentials.password=${{ secrets.GITHUB_TOKEN }} \
             --set github.credentials.username=${{ github.actor }} \
