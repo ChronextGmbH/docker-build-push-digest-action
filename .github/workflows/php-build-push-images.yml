@@ -5,7 +5,7 @@ on:
     outputs:
       deployment_image:
         description: "path to docker image with tag (github.ref_name)"
-        value: ${{ jobs.set-image-name.outputs.deployment-image }}
+        value: ${{ jobs.setup-image-name.outputs.deployment-image }}
     secrets:
       composer-token:
         description: "GitHub token"
