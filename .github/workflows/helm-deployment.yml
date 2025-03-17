@@ -78,7 +78,7 @@ jobs:
           IMAGE_NAME=$(echo "${{ inputs.docker_image }}" | tr '[:upper:]' '[:lower:]')
           
           helm upgrade ${{ inputs.helm_app_name }} /service-chart \
-            --kube-token $TOKEN \K
+            --kube-token $TOKEN \
             --kube-apiserver https://kubernetes.default.svc \
             --kube-ca-file /var/run/ca.crt \
             --debug --install --create-namespace \
