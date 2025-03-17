@@ -76,7 +76,7 @@ jobs:
           IMAGE_NAME=$(echo "${{ inputs.docker_image }}" | tr '[:upper:]' '[:lower:]')
           
           helm upgrade ${{ inputs.helm_app_name }} /service-chart \
-            --kube-token $TOKEN \
+            --kube-token $TOKEN \K
             --kube-apiserver https://kubernetes.default.svc \
             --kube-ca-file /var/run/ca.crt \
             --debug --install --create-namespace \
@@ -86,7 +86,7 @@ jobs:
             --set image.name=$IMAGE_NAME \
             --set ingress.host=${{ inputs.ingress_host }} \
             --set image.credentials.username=${{ github.actor }} \
-            --set image.credentials.password=${{ secrets.GITHUB_TOKEN }} \
+            --set image.credentials.password=${{ secrets.GHA_TOKEN }} \
             --set github.credentials.username=${{ github.actor }} \
             --set github.credentials.password=${{ secrets.GHA_TOKEN }} \
             --set keda.prod.aws_key_id=${{ secrets.AWS_KEDA_PROD_ACCESS_KEY_ID }} \
