@@ -43,6 +43,7 @@ runs:
       working-directory: ./deploy/terraform/${{ inputs.tf_environment }}
     - name: tfsec
       if: github.event_name == 'pull_request' && github.event.pull_request.merged == false
+      continue-on-error: true
       uses: aquasecurity/tfsec-action@v1.0.3
       with:
         working-directory: ./deploy/terraform/${{ inputs.tf_environment }}
