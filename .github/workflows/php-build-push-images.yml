@@ -68,7 +68,6 @@ jobs:
         run: |
           SHARED_VARIABLE="${{ inputs.IMAGE_FOLDER_BASE }}/${{ inputs.image_folder_name }}"
           echo "dockerfile-path=$SHARED_VARIABLE" >> $GITHUB_OUTPUT
-        
 
   build-base-image:
     needs:
