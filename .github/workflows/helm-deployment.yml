@@ -32,6 +32,11 @@ on:
         description: "Helm app name"
         required: true
         type: string
+      service_account_role_arn:
+        description: "Service account role ARN"
+        required: false
+        type: string
+        default: ""
 
     secrets:
       GHA_TOKEN:
@@ -72,6 +77,7 @@ jobs:
       - name: Deploy to ${{ inputs.environment }}
         run: |
           export SQS_URL=${{ inputs.sqs_url_prefix }}
+          export SERVICE_ACCOUNT_ROLE_ARN=${{ inputs.service_account_role_arn }}
           envsubst < deploy/helm/values.yaml > deploy/helm/values-env.yaml
           cat deploy/helm/values-env.yaml
           export TOKEN=$(cat /var/run/token)
