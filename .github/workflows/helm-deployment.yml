@@ -41,6 +41,8 @@ on:
     secrets:
       GHA_TOKEN:
         required: true
+      REGISTRY_USERNAME:
+        required: false
       REGISTRY_TOKEN:
         required: true
       AWS_KEDA_PROD_ACCESS_KEY_ID:
@@ -93,10 +95,10 @@ jobs:
             --set app_env=${{ inputs.chart_app_env }} \
             --set image.name=$IMAGE_NAME \
             --set ingress.host=${{ inputs.ingress_host }} \
-            --set image.credentials.username=${{ github.actor }} \
-            --set image.credentials.password=${{ secrets.REGISTRY_TOKEN }} \
-            --set github.credentials.username=${{ secrets.GHCR_USERNAME }} \
-            --set github.credentials.password=${{ secrets.GHCR_TOKEN }} \
+            --set image.credentials.username=${{ secrets.GHCR_USERNAME }} \
+            --set image.credentials.password=${{ secrets.GHCR_TOKEN }} \
+            --set github.credentials.username=${{ secrets.REGISTRY_USERNAME }} \
+            --set github.credentials.password=${{ secrets.REGISTRY_TOKEN }} \
             --set keda.prod.aws_key_id=${{ secrets.AWS_KEDA_PROD_ACCESS_KEY_ID }} \
             --set keda.prod.aws_key_secret=${{ secrets.AWS_KEDA_PROD_ACCESS_KEY_SECRET }} \
             --set keda.stage.aws_key_id=${{ secrets.AWS_KEDA_STAGE_ACCESS_KEY_ID }} \
