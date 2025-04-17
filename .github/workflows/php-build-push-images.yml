@@ -1,0 +1,128 @@
+name: Build and Publish Docker Images
+
+on:
+  workflow_call:
+    outputs:
+      deployment_image:
+        description: "path to docker image with tag (github.ref_name)"
+        value: ${{ jobs.setup-image-name.outputs.deployment-image }}
+    secrets:
+      composer-token:
+        description: "GitHub token"
+        required: true
+      pub-key:
+        description: "service public key"
+        required: true
+    inputs:
+      image_folder_base:
+        type: string
+        description: "Path to dockerfiles location"
+        required: false
+        default: "./deploy/containers/"
+      image_version:
+        type: string
+        description: "image version suffix - e.g. 8.1.1 should match php version used in dockerfile"
+        required: false
+        default: "8.2"
+      image_folder_name:
+        type: string
+        description: "subdirectory name"
+        required: false
+        default: "app"
+      deployment_image_tag:
+        type: string
+        description: "deployment image tag"
+        required: false
+        default: "stage"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BASE_REPO: ghcr.io/${{ github.repository }}/app
+
+permissions:
+  contents: read
+  packages: write
+  attestations: write
+  id-token: write
+
+jobs:
+
+  setup-image-name:
+    runs-on: ubuntu-latest
+    outputs:
+      image-name: ${{ steps.set-output.outputs.image-name }}
+      deployment-image: ${{ steps.set-output.outputs.deployment-image }}
+      dockerfile-path: ${{ steps.set-output2.outputs.dockerfile-path }}
+    steps:
+
+      - name: Set image name
+        id: set-output
+        run: |
+          SHARED_VARIABLE=$(echo "${{ env.IMAGE_BASE_REPO }}-${{ inputs.image_version }}" | tr '[:upper:]' '[:lower:]')
+          DEPLOYMENT_IMAGE=$(echo "${SHARED_VARIABLE}-${{ inputs.deployment_image_tag }}:${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]')
+          echo "image-name=$SHARED_VARIABLE" >> $GITHUB_OUTPUT
+          echo "deployment-image=$DEPLOYMENT_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Set dockerfile path
+        id: set-output2
+        run: |
+          SHARED_VARIABLE="${{ inputs.IMAGE_FOLDER_BASE }}/${{ inputs.image_folder_name }}"
+          echo "dockerfile-path=$SHARED_VARIABLE" >> $GITHUB_OUTPUT
+
+  build-base-image:
+    needs:
+      - setup-image-name
+
+    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push.yml@main
+    with:
+      name: "${{ needs.setup-image-name.outputs.image-name }}-base"
+      dockerfile: "${{ needs.setup-image-name.outputs.dockerfile-path }}/Base.Dockerfile"
+      context: .
+
+  build-test-image:
+    needs:
+      - setup-image-name
+      - build-base-image
+
+
+    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push.yml@main
+    with:
+      name: '${{ needs.setup-image-name.outputs.image-name }}-test'
+      dockerfile: ${{ needs.setup-image-name.outputs.dockerfile-path }}/Test.Dockerfile
+      context: .
+      build-args: |
+        FROM_BASE=${{ needs.setup-image-name.outputs.image-name }}-base:${{ github.ref_name }}
+
+  build-develop-image:
+    needs:
+      - build-base-image
+      - setup-image-name
+
+    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push.yml@main
+    with:
+      name: '${{ needs.setup-image-name.outputs.image-name }}-develop'
+      dockerfile: ${{ needs.setup-image-name.outputs.dockerfile-path }}/Test.Dockerfile
+      context: .
+      build-args: |
+        FROM_BASE=${{ needs.setup-image-name.outputs.image-name }}-base:${{ github.ref_name }}
+
+  build-deploy-image:
+    needs:
+      - setup-image-name
+      - build-base-image
+      - build-develop-image
+
+    secrets:
+      pub-key: ${{ secrets.PUB_KEY }}
+      composer-token: ${{ secrets.composer-token }}
+
+    uses: ChronextGmbH/docker-build-push-digest-action/.github/workflows/docker-build-push-deployment-image.yml@main
+    with:
+      name: '${{ needs.setup-image-name.outputs.image-name }}-${{ inputs.deployment_image_tag }}'
+      dockerfile: ${{ needs.setup-image-name.outputs.dockerfile-path }}/Deploy.Dockerfile
+      context: .
+      base_image: "${{ needs.setup-image-name.outputs.image-name }}-base:${{ github.ref_name }}"
+      develop_image: "${{ needs.setup-image-name.outputs.image-name }}-develop:${{ github.ref_name }}"
+
+      
+
