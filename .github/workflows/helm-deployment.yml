@@ -1,0 +1,99 @@
+name: Deploy Workflow
+
+on:
+  workflow_call:
+    inputs:
+      docker_image:
+        description: "Docker image to use"
+        required: true
+        type: string
+      environment:
+        description: "Deployment environment"
+        required: true
+        type: string
+      sqs_url_prefix:
+        description: "base sqs url"
+        required: true
+        type: string
+      namespace:
+        description: "Kubernetes namespace"
+        required: true
+        type: string
+      ingress_host:
+        description: "ingress host - application domain"
+        required: false
+        type: string
+        default: ""
+      chart_app_env:
+        description: "App environment"
+        required: true
+        type: string
+      helm_app_name:
+        description: "Helm app name"
+        required: true
+        type: string
+
+    secrets:
+      GHA_TOKEN:
+        required: true
+      REGISTRY_USERNAME:
+        required: false
+      REGISTRY_TOKEN:
+        required: true
+      AWS_KEDA_PROD_ACCESS_KEY_ID:
+        required: true
+      AWS_KEDA_PROD_ACCESS_KEY_SECRET:
+        required: true
+      AWS_KEDA_STAGE_ACCESS_KEY_ID:
+        required: true
+      AWS_KEDA_STAGE_ACCESS_KEY_SECRET:
+        required: true
+
+jobs:
+  deploy:
+    permissions:
+      packages: write
+      contents: read
+    runs-on: arc-runner-${{ inputs.environment }}
+    environment: ${{ inputs.environment }}
+
+    container:
+      image: ghcr.io/chronextgmbh/helm-deploy:master
+      volumes:
+        - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt:/var/run/ca.crt
+        - /var/run/secrets/kubernetes.io/serviceaccount/token:/var/run/token
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GHA_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+
+      - name: Deploy to ${{ inputs.environment }}
+        run: |
+          export SQS_URL=${{ inputs.sqs_url_prefix }}
+          envsubst < deploy/helm/values.yaml > deploy/helm/values-env.yaml
+          cat deploy/helm/values-env.yaml
+          export TOKEN=$(cat /var/run/token)
+          IMAGE_NAME=$(echo "${{ inputs.docker_image }}" | tr '[:upper:]' '[:lower:]')
+          
+          helm upgrade ${{ inputs.helm_app_name }} /service-chart \
+            --kube-token $TOKEN \
+            --kube-apiserver https://kubernetes.default.svc \
+            --kube-ca-file /var/run/ca.crt \
+            --debug --install --create-namespace \
+            -f deploy/helm/values-env.yaml \
+            --namespace ${{ inputs.namespace }} \
+            --set app_env=${{ inputs.chart_app_env }} \
+            --set image.name=$IMAGE_NAME \
+            --set ingress.host=${{ inputs.ingress_host }} \
+            --set image.credentials.username=${{ secrets.GHCR_USERNAME }} \
+            --set image.credentials.password=${{ secrets.GHCR_TOKEN }} \
+            --set github.credentials.username=${{ secrets.REGISTRY_USERNAME }} \
+            --set github.credentials.password=${{ secrets.REGISTRY_TOKEN }} \
+            --set keda.prod.aws_key_id=${{ secrets.AWS_KEDA_PROD_ACCESS_KEY_ID }} \
+            --set keda.prod.aws_key_secret=${{ secrets.AWS_KEDA_PROD_ACCESS_KEY_SECRET }} \
+            --set keda.stage.aws_key_id=${{ secrets.AWS_KEDA_STAGE_ACCESS_KEY_ID }} \
+            --set keda.stage.aws_key_secret=${{ secrets.AWS_KEDA_STAGE_ACCESS_KEY_SECRET }}
