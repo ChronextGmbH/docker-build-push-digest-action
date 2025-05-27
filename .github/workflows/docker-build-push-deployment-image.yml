@@ -9,6 +9,9 @@ on:
       pub-key:
           description: "GitHub token"
           required: true
+      private-key:
+          description: "GitHub token"
+          required: false
     inputs:
       dockerfile:
         type: string
@@ -77,6 +80,7 @@ jobs:
             FROM_DEVELOP=${{ inputs.develop_image }}
             USER_SERVICE_PUB_KEY=${{ secrets.pub-key }}
             COMPOSER_TOKEN=${{ secrets.composer-token }}
+            USER_SERVICE_PRIVATE_KEY=${{ secrets.private-key }}
 
 
   merge-digests:
